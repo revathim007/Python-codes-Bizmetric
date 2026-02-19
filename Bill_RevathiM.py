@@ -1,17 +1,17 @@
 import pyodbc
+import logging
 from datetime import datetime
 
 def get_connection():
     conn = pyodbc.connect(
         "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=LAPTOP-7DKKRVFQ\\SQLEXPRESS;" 
+        "SERVER=LAPTOP-7DKKRVFQ\SQLEXPRESS;" 
         "DATABASE=RESTAURANT;"
         "Trusted_Connection=yes;"
     )
     return conn
 
 
-# menu class
 class Menu:
 
     def display_menu(self):
@@ -30,7 +30,6 @@ class Menu:
         conn.close()
 
 
-#tking order
 class Order:
 
     def __init__(self, table_number):
@@ -40,14 +39,17 @@ class Order:
     def take_order(self):
         conn = get_connection()
         cursor = conn.cursor()
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s"
+        )
 
         while True:
             try:
                 item_id = int(input("\nEnter Item ID (0 to Finish): "))
-                
                 if item_id == 0:
                     break
-
+            
                 quantity = int(input("Enter Quantity: "))
 
                 cursor.execute("SELECT dish_name, price FROM Menu WHERE item_id = ?", item_id)
@@ -78,7 +80,6 @@ class Order:
         conn.close()
 
 
-#bill
 class Billing:
 
     def __init__(self, table_number, orders):
@@ -105,7 +106,8 @@ class Billing:
         return grand_total
 
     def print_bill_to_file(self):
-        filename = f"Bill_Table_{self.table_number}.txt"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"D:/Revathi/Biz Metric Internship/Python/Python Code/Bill_Table_{self.table_number}_{timestamp}.txt"
 
         with open(filename, "w", encoding="utf-8") as file:
             file.write("=========== RESTAURANT BILL ===========\n")
@@ -127,7 +129,6 @@ class Billing:
         print(f"Bill saved as '{filename}' successfully!")
 
 
-
 def main():
     menu = Menu()
     menu.display_menu()
@@ -143,6 +144,7 @@ def main():
 
     if len(order.orders) == 0:
         print("No items ordered.")
+        logging.log(logging.INFO,"Stopped the procces no orders")
         return
 
     billing = Billing(table_number, order.orders)
@@ -151,7 +153,7 @@ def main():
     choice = input("\nDo you want to print bill to text file? (y/n): ")
     if choice.lower() == 'y':
         billing.print_bill_to_file()
-
+        logging.log(logging.INFO,"Process is completed")
 
 
 if __name__ == "__main__":
